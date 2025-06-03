@@ -139,6 +139,8 @@ pub enum CellColor {
     LimeYellow,
     Lavender,
     WarmBeige,
+    DarkGray,
+    Pink,
 }
 
 impl CellColor {
@@ -159,6 +161,10 @@ impl CellColor {
             Some(CellColor::Lavender)
         } else if label.contains("Warm Beige") {
             Some(CellColor::WarmBeige)
+        } else if label.contains("Dark Gray") {
+            Some(CellColor::DarkGray)
+        } else if label.contains("Pink") {
+            Some(CellColor::Pink)
         } else {
             None
         }

@@ -1,7 +1,18 @@
-use linkedin_queens::{game_logic::queens, html_parser::parse_board};
+use linkedin_queens::{process_image, queens};
 
 fn main() {
-    let html_content = include_str!("../html_board2.html");
-    let board = parse_board(&html_content);
-    queens(&board).unwrap();
+    // Example: Process board from image
+    match process_image("image_with_queens.png") {
+        Ok(board) => {
+            println!("Board from image:");
+            for row in &board {
+                println!("{:?}", row);
+            }
+            // Try to solve the queens puzzle
+            if let Err(e) = queens(&board) {
+                println!("Error solving puzzle: {}", e);
+            }
+        }
+        Err(e) => println!("Error processing image: {}", e),
+    }
 }

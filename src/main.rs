@@ -1,201 +1,89 @@
 use std::collections::HashSet;
 
+use scraper::{Html, Selector};
+
 fn main() {
-    // let mut board = vec![
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Orange,
-    //         CellColor::Orange,
-    //         CellColor::Orange,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Orange,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Green,
-    //         CellColor::Green,
-    //         CellColor::Green,
-    //         CellColor::Blue,
-    //         CellColor::Gray,
-    //         CellColor::Blue,
-    //         CellColor::Blue,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Green,
-    //         CellColor::Red,
-    //         CellColor::Blue,
-    //         CellColor::Gray,
-    //         CellColor::Gray,
-    //         CellColor::Yellow,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Red,
-    //         CellColor::Red,
-    //         CellColor::Blue,
-    //         CellColor::Gray,
-    //         CellColor::Yellow,
-    //         CellColor::Yellow,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Red,
-    //         CellColor::DarkGray,
-    //         CellColor::DarkGray,
-    //         CellColor::DarkGray,
-    //         CellColor::Yellow,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::DarkGray,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //     ],
-    //     vec![
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //         CellColor::Purple,
-    //     ],
-    // ];
-    let board = vec![
-        vec![
-            CellColor::Orange,
-            CellColor::Orange,
-            CellColor::Orange,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-        ],
-        vec![
-            CellColor::Orange,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Red,
-        ],
-        vec![
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Blue,
-            CellColor::Green,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Red,
-        ],
-        vec![
-            CellColor::Red,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Green,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Gray,
-            CellColor::Red,
-        ],
-        vec![
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Red,
-            CellColor::Red,
-        ],
-        vec![
-            CellColor::Red,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Purple,
-            CellColor::Yellow,
-            CellColor::Yellow,
-        ],
-        vec![
-            CellColor::Red,
-            CellColor::Red,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Blue,
-            CellColor::Purple,
-            CellColor::Purple,
-            CellColor::Yellow,
-            CellColor::Yellow,
-        ],
-        vec![
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::DarkGray,
-            CellColor::DarkGray,
-            CellColor::DarkGray,
-            CellColor::DarkGray,
-        ],
-        vec![
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::Pink,
-            CellColor::DarkGray,
-            CellColor::DarkGray,
-        ],
-    ];
+    let html_content = include_str!("../html_board1.html");
+    let board = parse_board(&html_content);
+    queens(&board).unwrap();
+}
+
+fn parse_board(html_content: &str) -> Vec<Vec<CellColor>> {
+    let document = Html::parse_document(&html_content);
+
+    // Get board dimensions from the grid style
+    let grid_selector = Selector::parse("div#queens-grid").unwrap();
+    let grid = document.select(&grid_selector).next().unwrap();
+    let style = grid.value().attr("style").unwrap();
+    let rows = style
+        .split("--rows: ")
+        .nth(1)
+        .unwrap()
+        .split(";")
+        .next()
+        .unwrap()
+        .trim()
+        .parse::<usize>()
+        .unwrap();
+    let cols = style
+        .split("--cols: ")
+        .nth(1)
+        .unwrap()
+        .split(";")
+        .next()
+        .unwrap()
+        .trim()
+        .parse::<usize>()
+        .unwrap();
+
+    // it's always a n*n board, so rows == cols
+    println!("Board dimensions: {}x{}", rows, cols);
+
+    let cell_selector = Selector::parse("div.queens-cell-with-border").unwrap();
+    let mut board = vec![vec![CellColor::Lavender; cols]; rows];
+
+    for cell in document.select(&cell_selector) {
+        let label = cell.value().attr("aria-label").unwrap();
+        let row = label
+            .split("row ")
+            .nth(1)
+            .and_then(|s| s.split(",").next())
+            .and_then(|s| s.parse::<usize>().ok())
+            .unwrap()
+            - 1; // Convert to 0-based index
+
+        let col = label
+            .split("column ")
+            .nth(1)
+            .and_then(|s| s.parse::<usize>().ok())
+            .unwrap()
+            - 1; // Convert to 0-based index
+
+        println!("label: {}, row: {}, col: {}", label, row, col);
+
+        let cell_color = CellColor::from_aria_label(label).unwrap();
+
+        board[row][col] = cell_color;
+    }
+
+    for row in &board {
+        println!("{:?}", row);
+    }
+
+    board
+}
+
+fn queens(board: &Vec<Vec<CellColor>>) -> Result<(), String> {
     let mut status: Vec<Vec<Option<Status>>> = vec![vec![None; board.len()]; board.len()];
     // the game uses backtrack to solve the game, it doesn't rely on marking
     // cells with (can not be a queen) by applying the rules, it's just a
     // backtracking brute-force solution
     let mut colors: HashSet<CellColor> = HashSet::with_capacity(board.len());
-    if backtrack(&board, &mut status, 0, board.len(), &mut colors) {
-        println!("Solution found")
-    } else {
-        println!("No solution found")
+    if !backtrack(&board, &mut status, 0, board.len(), &mut colors) {
+        return Err("No solution found".to_string());
     }
     dbg!(&status);
-    // dbg!(&board);
+    Ok(())
 }
 
 fn backtrack(
@@ -316,15 +204,35 @@ fn dfs_found_queen_in_same_color_grid(
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum CellColor {
-    Green,
-    Blue,
-    Red,
-    Yellow,
-    Purple,
-    Orange,
-    Gray,
-    DarkGray,
-    Pink,
+    PeachOrange,
+    SoftBlue,
+    PastelGreen,
+    LightGray,
+    VibrantCoral,
+    LimeYellow,
+    Lavender,
+}
+
+impl CellColor {
+    fn from_aria_label(label: &str) -> Option<Self> {
+        if label.contains("Peach Orange") {
+            Some(CellColor::PeachOrange)
+        } else if label.contains("Soft Blue") {
+            Some(CellColor::SoftBlue)
+        } else if label.contains("Pastel Green") {
+            Some(CellColor::PastelGreen)
+        } else if label.contains("Light Gray") {
+            Some(CellColor::LightGray)
+        } else if label.contains("Vibrant Coral") {
+            Some(CellColor::VibrantCoral)
+        } else if label.contains("Lime Yellow") {
+            Some(CellColor::LimeYellow)
+        } else if label.contains("Lavender") {
+            Some(CellColor::Lavender)
+        } else {
+            None
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

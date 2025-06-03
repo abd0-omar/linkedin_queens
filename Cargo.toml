@@ -1,6 +1,12 @@
 [package]
-name = "queens"
+name = "linkedin_queens"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+scraper = "0.23.1"
+
+# for future scraping 
+# thirtyfour = "0.35.0"
+# reqwest = { version = "0.12.19" }
+# tokio = { version = "1.45.1", features = ["full"] }

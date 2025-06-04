@@ -9,7 +9,9 @@ pub fn queens(board: &Vec<Vec<CellColor>>) -> Result<(), String> {
     if !backtrack(&board, &mut status, 0, board.len(), &mut colors) {
         return Err("No solution found".to_string());
     }
-    dbg!(&status);
+    for row in &status {
+        println!("{:?}", row);
+    }
     Ok(())
 }
 

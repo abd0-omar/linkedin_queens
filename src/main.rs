@@ -2,7 +2,7 @@ use linkedin_queens::{process_image, queens};
 
 fn main() {
     // Example: Process board from image
-    match process_image("image_with_queens.png") {
+    match process_image("image_04062025.png") {
         Ok(board) => {
             println!("Board from image:");
             for row in &board {

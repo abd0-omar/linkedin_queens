@@ -1,18 +1,18 @@
 use std::collections::HashSet;
 
-pub fn queens(board: &Vec<Vec<CellColor>>) -> Result<(), String> {
+pub fn queens(board: &Vec<Vec<CellColor>>) -> Result<Vec<usize>, String> {
     let mut status: Vec<Vec<Option<Status>>> = vec![vec![None; board.len()]; board.len()];
     // the game uses backtrack to solve the game, it doesn't rely on marking
     // cells with (can not be a queen) by applying the rules, it's just a
     // backtracking brute-force solution
     let mut colors: HashSet<CellColor> = HashSet::with_capacity(board.len());
-    if !backtrack(&board, &mut status, 0, board.len(), &mut colors) {
-        return Err("No solution found".to_string());
+    if let Some(result) = backtrack(&board, &mut status, 0, board.len(), &mut colors) {
+        return Ok(result);
     }
     for row in &status {
         println!("{:?}", row);
     }
-    Ok(())
+    Err("No solution found".to_string())
 }
 
 fn backtrack(
@@ -21,9 +21,21 @@ fn backtrack(
     row: usize,
     n: usize,
     colors: &mut HashSet<CellColor>,
-) -> bool {
+) -> Option<Vec<usize>> {
     if row == n {
-        return true;
+        // there is a `data-cell-idx` attribute in the board, which is the index of
+        // the cell as a flattened array
+        let mut result = Vec::with_capacity(n);
+        // idx = i * m + j
+        // I remember it like this, idx = i'm j
+        for row in 0..n {
+            for col in 0..n {
+                if status[row][col].is_some() {
+                    result.push(row * n + col);
+                }
+            }
+        }
+        return Some(result);
     }
 
     for col in 0..n {
@@ -32,15 +44,16 @@ fn backtrack(
             status[row][col] = Some(Status::Queen);
             colors.insert(board[row][col]);
             // backtrack
-            if backtrack(board, status, row + 1, n, colors) {
-                return true;
+            let backtrack_result = backtrack(board, status, row + 1, n, colors);
+            if backtrack_result.is_some() {
+                return backtrack_result;
             }
             // undo change
             status[row][col] = None;
             colors.remove(&board[row][col]);
         }
     }
-    false
+    None
 }
 
 fn is_valid(
@@ -177,6 +190,8 @@ impl CellColor {
 enum Status {
     Queen,
     // won't use the below variant
+    // or if you're feeling ENGLISH, the latter possible variation, I think
+    // that's worse
     // CantBeAQueen,
 }
 
